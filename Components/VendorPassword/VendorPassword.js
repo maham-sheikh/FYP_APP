@@ -10,6 +10,7 @@ import {
   Alert,
   Image,
 } from "react-native";
+import icon from "../../assets/icon.png";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import BackArrow from "../../assets/arrow.png";
 
@@ -64,7 +65,8 @@ function VendorPassword() {
   return (
     <View style={styles.container}>
       <View style={styles.containerhome}>
-        <Text style={styles.header}>Create Password</Text>
+         <Image source={icon} style={styles.imageAS} />
+        <Text style={styles.textAAS}>Create Password</Text>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.navigate("VendorAdress",{
@@ -123,7 +125,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     alignItems: "center",
     backgroundColor: "#F1FFF3",
-    paddingBottom: height * 0.1,
+    paddingBottom: height * 0.02,
   },
   containerhome: {
     backgroundColor: "#00B1D0",
@@ -134,6 +136,14 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     left: 0,
+  },
+  imageAS: {
+    resizeMode: "contain",
+    width: width * 0.15,
+    height: undefined,
+    aspectRatio: 1,
+    marginBottom: width * 0.04,
+    marginTop: width * 0.08,
   },
   backButton: {
     position: "absolute",
@@ -152,32 +162,43 @@ const styles = StyleSheet.create({
     width: width * 0.03,
     height: height * 0.03,
   },
-  header: {
+  textAAS: {
+    fontStyle: "italic",
+    fontWeight: "500",
+    lineHeight: 29.26,
+    textAlign: "center",
+    color: "#ffffff",
     fontSize: width < 350 ? 18 : width * 0.07,
-    fontWeight: "bold",
-    color: "white",
-    marginTop: 80,
   },
   containerA: {
     width: width * 0.8,
-    marginTop: height * 0.3,
+    marginTop: height * 0.28,
     alignSelf: "center",
   },
   label: {
     fontSize: width * 0.05,
     color: "#333",
-    fontWeight: "600",
+    fontWeight: "300",
     fontFamily: "Montserrat",
     marginBottom: 10,
+   marginTop:15,
   },
   input: {
-    width: "100%",
     backgroundColor: "white",
-    padding: 10,
-    borderRadius: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
     borderWidth: 1,
     borderColor: "#CCCCCC",
-    marginBottom: 20,
+    marginBottom: 15,
+    height: height * 0.052,
+    borderRadius: 20,
+    padding: 10,
+    marginTop: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   button: {
     backgroundColor: "#00B1D0",
@@ -185,6 +206,7 @@ const styles = StyleSheet.create({
     width: "100%",
     borderRadius: 30,
     alignItems: "center",
+    marginTop: 20,
   },
   buttonText: {
     color: "white",
