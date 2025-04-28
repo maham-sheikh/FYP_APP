@@ -8,6 +8,8 @@ import {
   Dimensions,
   ScrollView,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import BackArrow from "../../assets/arrow.png";
@@ -25,14 +27,28 @@ function VendorAddress() {
   const [address, setAddress] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [city, setCity] = useState("");
-
   const [errors, setErrors] = useState({});
 
   const handleContinue = () => {
     let newErrors = {};
 
-    if (!address.trim()) newErrors.address = "Full Address is required";
-    if (!city.trim()) newErrors.city = "City is required";
+    if (!address.trim()) {
+      newErrors.address = "Full Address is required";
+    } else if (address.trim().length < 10) {
+      newErrors.address = "Address must be detailed (House No, Street, Area)";
+    }
+
+    if (!postalCode.trim()) {
+      newErrors.postalCode = "Postal Code is required";
+    } else if (!/^\d{5,6}$/.test(postalCode)) {
+      newErrors.postalCode = "Postal Code must be 5 or 6 digits only";
+    }
+
+    if (!city.trim()) {
+      newErrors.city = "City is required";
+    } else if (!/^[a-zA-Z\s]+$/.test(city)) {
+      newErrors.city = "City must contain only letters";
+    }
 
     setErrors(newErrors);
 
@@ -53,56 +69,88 @@ function VendorAddress() {
   return (
     <View style={styles.container}>
       <View style={styles.containerhome}>
-        <Text style={styles.header}>Business Address</Text>
         <Image source={Address} style={styles.imageAS} />
+        <Text style={styles.header}>Business Address</Text>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => navigation.navigate("VendorSignup",{fullName, cnic, email, phone, gender,})}
+          onPress={() =>
+            navigation.navigate("VendorSignup", {
+              fullName,
+              cnic,
+              email,
+              phone,
+              gender,
+            })
+          }
         >
           <Image source={BackArrow} style={styles.arrowImage} />
         </TouchableOpacity>
       </View>
-      <ScrollView style={styles.containerA}>
-        <Text style={styles.label}>Full Address</Text>
-        <TextInput
-          style={[styles.input, errors.address && { borderColor: "red" }]}
-          placeholder="Full Address"
-          value={address}
-          onChangeText={setAddress}
-        />
-        {errors.address && (
-          <Text style={styles.errorText}>{errors.address}</Text>
-        )}
 
-        <Text style={styles.label}>Postal Code</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Postal Code"
-          value={postalCode}
-          onChangeText={setPostalCode}
-          keyboardType="numeric"
-        />
+      {/* KeyboardAvoidingView used */}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView
+          style={styles.containerA}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Full Address */}
+          <Text style={styles.label}>Full Address</Text>
+          <TextInput
+            style={[styles.input, errors.address && { borderColor: "red" }]}
+            placeholder="House No, Street, Area Name"
+            value={address}
+            onChangeText={setAddress}
+          />
+          {errors.address && (
+            <Text style={styles.errorText}>{errors.address}</Text>
+          )}
 
-        <Text style={styles.label}>City</Text>
-        <TextInput
-          style={[styles.input, errors.city && { borderColor: "red" }]}
-          placeholder="City"
-          value={city}
-          onChangeText={setCity}
-        />
-        {errors.city && <Text style={styles.errorText}>{errors.city}</Text>}
+          {/* Postal Code */}
+          <Text style={styles.label}>Postal Code</Text>
+          <TextInput
+            style={[styles.input, errors.postalCode && { borderColor: "red" }]}
+            placeholder="Postal Code (5 or 6 digits)"
+            value={postalCode}
+            onChangeText={(text) => {
+              const numericText = text.replace(/[^0-9]/g, "").slice(0, 6);
+              setPostalCode(numericText);
+            }}
+            keyboardType="numeric"
+          />
+          {errors.postalCode && (
+            <Text style={styles.errorText}>{errors.postalCode}</Text>
+          )}
 
-        <View style={styles.warningContainer}>
-          <Image source={ExclamationIcon} style={styles.warningIcon} />
-          <Text style={styles.warningText}>
-            Address must all information (including any house/apartment number)
-          </Text>
-        </View>
+          {/* City */}
+          <Text style={styles.label}>City</Text>
+          <TextInput
+            style={[styles.input, errors.city && { borderColor: "red" }]}
+            placeholder="Enter City Name"
+            value={city}
+            onChangeText={(text) => {
+              const lettersOnly = text.replace(/[^a-zA-Z\s]/g, "");
+              setCity(lettersOnly);
+            }}
+          />
+          {errors.city && <Text style={styles.errorText}>{errors.city}</Text>}
 
-        <TouchableOpacity style={styles.button} onPress={handleContinue}>
-          <Text style={styles.buttonText}>Continue</Text>
-        </TouchableOpacity>
-      </ScrollView>
+          <View style={styles.warningContainer}>
+            <Image source={ExclamationIcon} style={styles.warningIcon} />
+            <Text style={styles.warningText}>
+              Address must include complete details (House No, Street, Area,
+              City).
+            </Text>
+          </View>
+
+          <TouchableOpacity style={styles.button} onPress={handleContinue}>
+            <Text style={styles.buttonText}>Continue</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }
@@ -110,8 +158,6 @@ function VendorAddress() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    justifyContent: "flex-start",
-    alignItems: "center",
     backgroundColor: "#F1FFF3",
     paddingBottom: height * 0.1,
   },
@@ -127,12 +173,10 @@ const styles = StyleSheet.create({
   },
   imageAS: {
     resizeMode: "contain",
-    width: width * 0.15,
-    height: width * 0.07,
+    width: width * 0.2,
     height: undefined,
     aspectRatio: 1,
-    marginBottom: 20,
-    marginTop: 15,
+    marginTop: width * 0.1,
   },
   backButton: {
     position: "absolute",
@@ -155,11 +199,12 @@ const styles = StyleSheet.create({
     fontSize: width < 350 ? 18 : width * 0.07,
     fontWeight: "bold",
     color: "white",
-    marginTop: 80,
+    marginBottom: 20,
+    marginTop: 10,
   },
   containerA: {
-    width: width * 0.8,
-    marginTop: height * 0.3,
+    width: width * 0.76,
+    marginTop: height * 0.27,
     alignSelf: "center",
   },
   label: {
@@ -170,13 +215,21 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   input: {
-    width: "100%",
     backgroundColor: "white",
-    padding: 10,
-    borderRadius: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
     borderWidth: 1,
     borderColor: "#CCCCCC",
-    marginBottom: 20,
+    marginBottom: 15,
+    borderRadius: 20,
+    padding: 10,
+    marginTop: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    height: height * 0.052,
   },
   warningContainer: {
     flexDirection: "row",
