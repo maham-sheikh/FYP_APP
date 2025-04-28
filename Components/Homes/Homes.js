@@ -12,6 +12,8 @@ import Location from '../../assets/Location.png';
 import SavePic from '../../assets/save.png';
 import addB from '../../assets/addBuisness.png';
 import { useFonts } from 'expo-font';
+import icon from "../../assets/icon.png";
+import BackArrow from "../../assets/arrow.png";
 
 const { width, height } = Dimensions.get('window');
 const API_BASE_URL = 'http://192.168.18.244:8000/api';
@@ -169,6 +171,12 @@ function Homes() {
   return (
     <View style={styles.containerAS}>
       <View style={styles.containerhome}>
+          <TouchableOpacity
+                  style={styles.backButton}
+                  onPress={() => navigation.navigate("CustomerSide")}
+                >
+                  <Image source={BackArrow} style={styles.arrowImage} />
+                </TouchableOpacity>
         <Image source={Logo} style={styles.imageAS} />
       </View>
 
@@ -240,6 +248,23 @@ const styles = StyleSheet.create({
     height: height * 0.25,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  backButton: {
+    position: "absolute",
+    top: height * 0.07,
+    left: width * 0.05,
+    width: width * 0.1,
+    height: width * 0.1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#ECECEC",
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: "#1E1E1E",
+  },
+  arrowImage: {
+    width: width * 0.03,
+    height: height * 0.03,
   },
   imageAS: {
     width: width * 0.25, 
