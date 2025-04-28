@@ -6,6 +6,7 @@ import Logo from '../../assets/icon.png';
 import Home from '../../assets/Home.png';
 import Discount from '../../assets/Discounts.png';
 import Location from '../../assets/Location.png';
+import BackArrow from "../../assets/arrow.png";
 
 const { width, height } = Dimensions.get('window');
 const API_BASE_URL = 'http://192.168.18.244:8000/api';
@@ -84,8 +85,15 @@ function VendorDashboard() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+         <TouchableOpacity
+                  style={styles.backButton}
+                  onPress={() => navigation.navigate("VendorLogin")}
+                >
+                  <Image source={BackArrow} style={styles.arrowImage} />
+                </TouchableOpacity>
+      <Image source={Logo} style={styles.logo} />
         <Text style={styles.headerTitle}>Your Business, Everyone's Solution</Text>
-        <Image source={Logo} style={styles.logo} />
+       
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -198,9 +206,29 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   logo: {
-    width: width * 0.25,
+    width: width * 0.15,
     height: undefined,
     aspectRatio: 1,
+    resizeMode: "contain",
+    marginBottom: width * 0.04,
+    marginTop: width * 0.001,
+  },
+  backButton: {
+    position: "absolute",
+    top: height * 0.07,
+    left: width * 0.05,
+    width: width * 0.1,
+    height: width * 0.1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#ECECEC",
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: "#1E1E1E",
+  },
+  arrowImage: {
+    width: width * 0.03,
+    height: height * 0.03,
   },
   scrollContainer: {
     width: '100%',
