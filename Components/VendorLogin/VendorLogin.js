@@ -29,7 +29,9 @@ function VendorLogin({ navigation }) {
   const [vendorSession, setVendorSession] = useState(null);
 
   if (!fontsLoaded) {
-    return <ActivityIndicator size="large" color="#00B1D0" style={styles.loaderSr} />;
+    return (
+      <ActivityIndicator size="large" color="#00B1D0" style={styles.loaderSr} />
+    );
   }
 
   const handleLogin = async () => {
@@ -49,10 +51,13 @@ function VendorLogin({ navigation }) {
     console.log("Sending login request...");
 
     try {
-      const response = await axios.post("http://192.168.18.244:8000/api/vendor/login", {
-        phone,
-        password,
-      });
+      const response = await axios.post(
+        "http://192.168.18.244:8000/api/vendor/login",
+        {
+          phone,
+          password,
+        }
+      );
 
       console.log("API Response:", response.data);
 
@@ -64,7 +69,8 @@ function VendorLogin({ navigation }) {
           Alert.alert("Success", "Login successful!", [
             {
               text: "OK",
-              onPress: () => navigation.navigate("VendorDashboard", { vendorId: vendor.id }),
+              onPress: () =>
+                navigation.navigate("VendorDashboard", { vendorId: vendor.id }),
             },
           ]);
         }
@@ -76,7 +82,10 @@ function VendorLogin({ navigation }) {
         if (error.response.status === 401) {
           Alert.alert("Error", "Invalid phone or password.");
         } else {
-          Alert.alert("Error", error.response.data.message || "An error occurred.");
+          Alert.alert(
+            "Error",
+            error.response.data.message || "An error occurred."
+          );
         }
       } else if (error.request) {
         Alert.alert("Error", "No response from the server. Please try again.");
@@ -111,7 +120,10 @@ function VendorLogin({ navigation }) {
             if (!text.startsWith("+92")) {
               text = "+92";
             }
-            const afterPrefix = text.slice(3).replace(/[^0-9]/g, "").slice(0, 10); 
+            const afterPrefix = text
+              .slice(3)
+              .replace(/[^0-9]/g, "")
+              .slice(0, 10);
             setPhone("+92" + afterPrefix);
           }}
           value={phone}
@@ -227,7 +239,7 @@ const styles = StyleSheet.create({
     borderColor: "#CCCCCC",
     marginBottom: 15,
     height: height * 0.06,
-    borderRadius: 10,
+    borderRadius: 20,
     padding: 10,
     marginTop: 10,
     shadowColor: "#000",

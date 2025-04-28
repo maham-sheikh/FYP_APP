@@ -21,7 +21,7 @@ function VendorSignup() {
   const [fullName, setFullName] = useState("");
   const [cnic, setCnic] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState("+92"); // Phone initialized with +92
   const [gender, setGender] = useState(null);
 
   const [errors, setErrors] = useState({});
@@ -68,7 +68,7 @@ function VendorSignup() {
         <Text style={styles.subHeader}>Connect to trusted services</Text>
       </View>
       <ScrollView style={styles.containerA}>
-        <Text style={styles.label}>Full Name</Text>
+        {/* Full Name */}
         <TextInput
           style={styles.input}
           placeholder="Full Name"
@@ -84,13 +84,16 @@ function VendorSignup() {
           <Text style={styles.errorText}>{errors.fullName}</Text>
         ) : null}
 
-        <Text style={styles.label}>CNIC</Text>
+        {/* CNIC */}
         <TextInput
           style={styles.input}
-          placeholder="CNIC"
+          placeholder="Enter CNIC (13 digits)"
           value={cnic}
           placeholderTextColor="#808080"
-          onChangeText={setCnic}
+          onChangeText={(text) => {
+            const numericText = text.replace(/[^0-9]/g, "").slice(0, 13);
+            setCnic(numericText);
+          }}
           keyboardType="numeric"
           returnKeyType="next"
         />
@@ -98,10 +101,10 @@ function VendorSignup() {
           <Text style={styles.errorText}>{errors.cnic}</Text>
         ) : null}
 
-        <Text style={styles.label}>Email</Text>
+        {/* Email */}
         <TextInput
           style={styles.input}
-          placeholder="Email (Optional)"
+          placeholder="Enter your Email (e.g., example@gmail.com)"
           value={email}
           placeholderTextColor="#808080"
           onChangeText={setEmail}
@@ -109,16 +112,20 @@ function VendorSignup() {
           returnKeyType="next"
         />
 
-        <Text style={styles.label}>Phone</Text>
+        {/* Phone */}
         <TextInput
           style={styles.input}
-          placeholder="Phone"
+          placeholder="Phone Number (e.g., +923001234567)"
           placeholderTextColor="#808080"
           value={phone}
           keyboardType="phone-pad"
           returnKeyType="done"
           onChangeText={(text) => {
-            setPhone(text);
+            if (!text.startsWith("+92")) {
+              text = "+92";
+            }
+            const afterPrefix = text.slice(3).replace(/[^0-9]/g, "").slice(0, 10);
+            setPhone("+92" + afterPrefix);
             setErrors((prev) => ({ ...prev, phone: "" }));
           }}
         />
@@ -240,26 +247,26 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   containerA: {
-    width: width * 0.8,
-    marginTop: height * 0.25,
+    width: width * 0.76,
+    marginTop: height * 0.27,
     alignSelf: "center",
   },
-  label: {
-    fontSize: width * 0.04,
-    color: "#333",
-    fontWeight: "500",
-    fontFamily: "Montserrat",
-    marginBottom: 5,
-  },
   input: {
-    width: "100%",
     backgroundColor: "white",
-    padding: 10,
-    borderRadius: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
     borderWidth: 1,
     borderColor: "#CCCCCC",
-    marginBottom: 25,
-    textAlign: "left",
+    marginBottom: 15,
+    borderRadius: 20,
+    padding: 10,
+    marginTop: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    height: height * 0.052,
   },
   errorText: {
     color: "red",
@@ -291,7 +298,7 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
   containerAAS: {
-    width: width * 0.8,
+    width: width * 0.7,
     alignSelf: "center",
   },
   button: {
