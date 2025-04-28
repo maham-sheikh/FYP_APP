@@ -1,12 +1,23 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import successIcon from "../../assets/success.png";
 
 const BusinessVerification = () => {
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      navigation.navigate('BuisnessSide'); 
+    }, 1000); 
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <View style={styles.container}>
       <Image 
-        source={successIcon} // Use the imported variable here
+        source={successIcon} 
         style={styles.icon}
       />
       <Text style={styles.headerText}>Successful</Text>

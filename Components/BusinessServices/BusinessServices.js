@@ -483,12 +483,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#F1FFF3",
     shadowOpacity: 0.1,
     shadowRadius: 2,
-    shadowColor: "#000", // Explicitly set a shadow color
+    shadowColor: "#000", 
     elevation: 2,
-    borderWidth: 1, // Make the border width consistent
+    borderWidth: 1,
     borderColor: "#00B1D0",
     borderStyle: "solid",
-    overflow: "hidden", //  shadow doesn't clip on iOS
+    overflow: "hidden",
   },
   subserviceItem: {
     flexDirection: "row",
@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     backgroundColor: "#00B1D0",
     padding: 15,
-    borderRadius: 5,
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
   nextButtonDisabled: {
     backgroundColor: "rgba(0, 177, 208, 0.4)", // 40% opacity of #00B1D0
     padding: 15,
-    borderRadius: 5,
+    borderRadius: 20,
     alignItems: "center",
     marginTop: 20,
   },

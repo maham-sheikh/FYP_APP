@@ -8,7 +8,7 @@ import {
   Alert,
   Dimensions,
 } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native"; 
+import { useNavigation, useRoute } from "@react-navigation/native";
 import axios from "axios";
 import BackArrow from "../../assets/arrow.png";
 import icon from "../../assets/icon.png";
@@ -18,7 +18,7 @@ const { width, height } = Dimensions.get("window");
 
 const BusinessConfirmation = () => {
   const navigation = useNavigation();
-  const route = useRoute(); 
+  const route = useRoute();
 
   const {
     fullName,
@@ -48,7 +48,7 @@ const BusinessConfirmation = () => {
         password,
         businessCategory,
         subService,
-        status: "pending", 
+        status: "pending",
       };
 
       const response = await axios.post(
@@ -72,7 +72,10 @@ const BusinessConfirmation = () => {
     } catch (error) {
       console.error("Error submitting application:", error);
       if (error.response) {
-        Alert.alert("Error", error.response.data.message || "An error occurred.");
+        Alert.alert(
+          "Error",
+          error.response.data.message || "An error occurred."
+        );
       } else if (error.request) {
         Alert.alert("Error", "No response from the server. Please try again.");
       } else {
@@ -82,7 +85,7 @@ const BusinessConfirmation = () => {
   };
 
   return (
-    <View style={styles.containerAS}>
+    <View style={styles.container}>
       <View style={styles.containerhome}>
         <Image source={icon} style={styles.imageAS} />
         <Text style={styles.textAS}>FINDIGO</Text>
@@ -94,45 +97,45 @@ const BusinessConfirmation = () => {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.gridAAS}>
+      <View style={styles.containerA}>
         <Text style={styles.label}>Service Name</Text>
-        <View style={styles.inputContainer}>
-          <Text style={styles.value}>{subService}</Text>
-        </View>
-        <Text style={styles.labelA}>Category</Text>
-        <View style={styles.inputContainer}>
-          <Text style={styles.value}>{businessCategory}</Text>
-        </View>
-      </View>
+        <Text style={styles.value}>{subService}</Text>
 
-      <View style={styles.warningContainer}>
-        <Image source={ExclamationIcon} style={styles.warningIcon} />
-        <Text style={styles.warningText}>
-          Once you click the confirm button your application would be submitted
-        </Text>
+        <Text style={styles.label}>Category</Text>
+
+        <Text style={styles.value}>{businessCategory}</Text>
+
+        <View style={styles.warningContainer}>
+          <Image source={ExclamationIcon} style={styles.warningIcon} />
+          <Text style={styles.warningText}>
+            Once you click the confirm button your application would be
+            submitted
+          </Text>
+        </View>
+
+        <TouchableOpacity style={styles.button} onPress={handleConfirm}>
+          <Text style={styles.buttonText}>Continue</Text>
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
-        <Text style={styles.buttonText}>Confirm</Text>
-      </TouchableOpacity>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  containerAS: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+  container: {
+    flexGrow: 1,
     backgroundColor: "#F1FFF3",
     paddingBottom: height * 0.1,
-    gap: 20,
   },
   containerhome: {
     backgroundColor: "#00B1D0",
     width: "100%",
-    height: height * 0.25,
+    height: height * 0.23,
     alignItems: "center",
     justifyContent: "center",
+    position: "absolute",
+    top: 0,
+    left: 0,
   },
   textAS: {
     fontFamily: "Poppins",
@@ -169,13 +172,10 @@ const styles = StyleSheet.create({
     width: width * 0.03,
     height: height * 0.03,
   },
-  gridAAS: {
-    flex: 1,
-    width: width * 0.8,
-    backgroundColor: "#00B1D0",
-    borderColor: "#00B1D0",
-    borderStyle: "solid",
-    backgroundColor: "#F1FFF3",
+  containerA: {
+    width: width * 0.76,
+    marginTop: height * 0.27,
+    alignSelf: "center",
   },
   label: {
     fontSize: width * 0.05,
@@ -183,28 +183,23 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontFamily: "Montserrat",
     marginBottom: 10,
-    marginTop: 60,
-  },
-  labelA: {
-    fontSize: width * 0.05,
-    color: "#333",
-    fontWeight: "600",
-    fontFamily: "Montserrat",
-    marginBottom: 10,
-    marginTop: 10,
-  },
-  inputContainer: {
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#CCCCCC",
-    borderRadius: 20,
-    padding: 10,
-    marginBottom: 30,
-    justifyContent: "center",
   },
   value: {
-    fontSize: 16,
-    color: "#666",
+    backgroundColor: "white",
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: "#CCCCCC",
+    marginBottom: 15,
+    borderRadius: 20,
+    padding: 10,
+    marginTop: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    height: height * 0.052,
   },
   warningContainer: {
     flexDirection: "row",
@@ -212,7 +207,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     width: "100%",
     justifyContent: "flex-start",
-    paddingHorizontal: "7%",
+    marginTop: 25,
   },
   warningIcon: {
     width: 30,
@@ -230,26 +225,17 @@ const styles = StyleSheet.create({
     marginLeft: 2,
     flex: 1,
   },
-  confirmButton: {
+  button: {
     backgroundColor: "#00B1D0",
-    borderRadius: 50,
-    paddingVertical: height * 0.02,
-    paddingHorizontal: width * 0.1,
-    marginVertical: height * 0.02,
-    width: width * 0.75,
-    height: height * 0.08,
+    padding: 15,
+    width: "100%",
+    borderRadius: 30,
     alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 60,
   },
   buttonText: {
-    fontFamily: "Montserrat",
-    fontSize: width * 0.05,
-    fontWeight: "700",
-    lineHeight: width * 0.07,
-    textAlign: "left",
-    textDecorationStyle: "solid",
-    color: "#FFFFFF",
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 
