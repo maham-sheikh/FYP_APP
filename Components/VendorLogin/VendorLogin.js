@@ -13,6 +13,7 @@ import {
 import icon from "../../assets/icon.png";
 import { useFonts } from "expo-font";
 import axios from "axios";
+import BackArrow from "../../assets/arrow.png";
 
 const { width, height } = Dimensions.get("window");
 
@@ -22,7 +23,7 @@ function VendorLogin({ navigation }) {
     Montserrat: require("../../assets/Montserrat-Regular.ttf"),
   });
 
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState("+92"); // Start with +92
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [vendorSession, setVendorSession] = useState(null);
@@ -38,9 +39,9 @@ function VendorLogin({ navigation }) {
       return;
     }
 
-    const phoneRegex = /^\+\d{1,3}\d{9,14}$/; 
+    const phoneRegex = /^\+92\d{10}$/; // Only +92 and exactly 10 digits
     if (!phoneRegex.test(phone)) {
-      Alert.alert("Error", "Please enter a valid phone number (e.g., +923211315301).");
+      Alert.alert("Error", "Please enter a valid phone number");
       return;
     }
 
@@ -89,20 +90,32 @@ function VendorLogin({ navigation }) {
   };
 
   return (
-    <View style={styles.containerAS}>
+    <View style={styles.container}>
       <View style={styles.containerhome}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.navigate("BuisnessSide")}
+        >
+          <Image source={BackArrow} style={styles.arrowImage} />
+        </TouchableOpacity>
         <Image source={icon} style={styles.imageAS} />
         <Text style={styles.textAS}>FINDIGO</Text>
-        <Text style={styles.textAS}>Your Business, Everyone's Solution</Text>
+        <Text style={styles.textAAS}>Your Business, Everyone's Solution</Text>
       </View>
 
-      <View style={styles.inputContainer}>
+      <View style={styles.containerA}>
         <Text style={styles.placeholder}>Phone Number</Text>
         <TextInput
           style={styles.input}
-          onChangeText={setPhone}
+          onChangeText={(text) => {
+            if (!text.startsWith("+92")) {
+              text = "+92";
+            }
+            const afterPrefix = text.slice(3).replace(/[^0-9]/g, "").slice(0, 10); 
+            setPhone("+92" + afterPrefix);
+          }}
           value={phone}
-          placeholder="Enter Your Phone Number (e.g., +923211315301)"
+          placeholder="Enter Your Phone Number"
           keyboardType="phone-pad"
           autoCapitalize="none"
         />
@@ -134,21 +147,39 @@ function VendorLogin({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  containerAS: {
-    flex: 1,
-    justifyContent: "center",
+  container: {
+    flexGrow: 1,
+    justifyContent: "flex-start",
     alignItems: "center",
     backgroundColor: "#F1FFF3",
-    paddingBottom: height * 0.1,
-    gap: 20,
+    paddingBottom: height * 0.02,
   },
   containerhome: {
     backgroundColor: "#00B1D0",
     width: "100%",
-    height: height * 0.25,
+    height: height * 0.23,
     alignItems: "center",
     justifyContent: "center",
-    flex: 1,
+    position: "absolute",
+    top: 0,
+    left: 0,
+  },
+  backButton: {
+    position: "absolute",
+    top: height * 0.07,
+    left: width * 0.05,
+    width: width * 0.1,
+    height: width * 0.1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#ECECEC",
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: "#1E1E1E",
+  },
+  arrowImage: {
+    width: width * 0.03,
+    height: height * 0.03,
   },
   textAS: {
     fontFamily: "Poppins",
@@ -159,20 +190,26 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: width < 350 ? 18 : width * 0.07,
   },
+  textAAS: {
+    fontStyle: "italic",
+    fontWeight: "300",
+    lineHeight: 29.26,
+    textAlign: "center",
+    color: "#ffffff",
+    fontSize: width < 350 ? 18 : width * 0.04,
+  },
   imageAS: {
     resizeMode: "contain",
     width: width * 0.15,
-    height: width * 0.07,
     height: undefined,
     aspectRatio: 1,
-    marginBottom: 20,
-    marginTop: 15,
+    marginBottom: width * 0.04,
+    marginTop: width * 0.08,
   },
-  inputContainer: {
-    padding: 10,
-    marginBottom: 30,
-    justifyContent: "center",
+  containerA: {
     width: width * 0.8,
+    marginTop: height * 0.28,
+    alignSelf: "center",
   },
   placeholder: {
     fontSize: width * 0.04,
@@ -204,7 +241,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     paddingVertical: height * 0.02,
     paddingHorizontal: width * 0.1,
-    marginVertical: height * 0.02,
+    marginVertical: height * 0.05,
     width: width * 0.75,
     height: height * 0.08,
     alignItems: "center",
@@ -226,7 +263,9 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     color: "#00B1D0",
-    marginTop: 15,
+    marginTop: width * 0.01,
+    fontSize: 17,
+    textDecorationLine: "underline",
   },
 });
 
