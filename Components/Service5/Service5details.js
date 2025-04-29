@@ -13,6 +13,8 @@ import { useFonts } from "expo-font";
 import { useIsFocused } from "@react-navigation/native";
 import axios from "axios";
 import { LocationContext } from "../Locationss/locationContext";
+import { useDispatch, useSelector } from 'react-redux';
+import { addFavourite, removeFavourite } from '../redux/favouritesSlice';
 
 import Home from "../../assets/Home.png";
 import Like from "../../assets/Favourities.png";
@@ -36,16 +38,30 @@ function Service5details({ route, navigation }) {
   });
 
   const [selectedDistance, setSelectedDistance] = useState("5km");
-  const [savedServices, setSavedServices] = useState({});
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const isFocused = useIsFocused();
 
+  const dispatch = useDispatch();
+  const favourites = useSelector((state) => state.favourites.services);
+
   const { location: userLocation, getCurrentLocation } =
     useContext(LocationContext);
 
   const { mainService, subService, subServiceId, icon } = route.params;
+
+  const isFavourite = (serviceId) => {
+    return favourites.some((s) => s.id === serviceId);
+  };
+
+  const toggleSaveService = (service) => {
+    if (isFavourite(service.id)) {
+      dispatch(removeFavourite(service.id));
+    } else {
+      dispatch(addFavourite(service));
+    }
+  };
 
   useEffect(() => {
     if (isFocused) {
@@ -104,13 +120,6 @@ function Service5details({ route, navigation }) {
 
   const deg2rad = (deg) => deg * (Math.PI / 180);
 
-  const toggleSaveService = (serviceName) => {
-    setSavedServices((prev) => ({
-      ...prev,
-      [serviceName]: !prev[serviceName],
-    }));
-  };
-
   const renderServices = () => {
     if (loading) {
       return (
@@ -160,24 +169,16 @@ function Service5details({ route, navigation }) {
           <View style={styles.myserviceRow}>
             <Text style={styles.serviceDistance}>{distance}</Text>
             <TouchableOpacity
-              onPress={() =>
-                toggleSaveService(vendor.business_name || vendor.fullName)
-              }
+              onPress={() => toggleSaveService(vendor)}
               style={styles.heartButton}
             >
               <View style={styles.verifiedSection}>
                 <Image
-                  source={
-                    savedServices[vendor.business_name || vendor.fullName]
-                      ? mysaveFilled
-                      : mysave
-                  }
+                  source={isFavourite(vendor.id) ? mysaveFilled : mysave}
                   style={styles.saveIcon}
                 />
                 <Text style={styles.verifiedText}>
-                  {savedServices[vendor.business_name || vendor.fullName]
-                    ? "Saved"
-                    : "Save"}
+                  {isFavourite(vendor.id) ? "Saved" : "Save"}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -254,39 +255,25 @@ function Service5details({ route, navigation }) {
         <View style={styles.serviceBox}>{renderServices()}</View>
       </ScrollView>
 
+      {/* Footer */}
       <View style={styles.footerContainerAS}>
-        <View
-          style={styles.footerIconContainer}
-          onTouchEnd={() => navigation.navigate("Homes")}
-        >
+        <View style={styles.footerIconContainer} onTouchEnd={() => navigation.navigate("Homes")}>
           <Image source={Home} style={styles.footerIcon} />
           <Text style={styles.footerIconText}>Home</Text>
         </View>
-        <View
-          style={styles.footerIconContainer}
-          onTouchEnd={() => navigation.navigate("Likes")}
-        >
+        <View style={styles.footerIconContainer} onTouchEnd={() => navigation.navigate("Likes")}>
           <Image source={Like} style={styles.footerIcon} />
           <Text style={styles.footerIconText}>Favourites</Text>
         </View>
-        <View
-          style={styles.footerIconContainer}
-          onTouchEnd={() => navigation.navigate("Servicess")}
-        >
+        <View style={styles.footerIconContainer} onTouchEnd={() => navigation.navigate("Servicess")}>
           <Image source={Category} style={styles.footerIcon} />
           <Text style={styles.footerIconText}>Services</Text>
         </View>
-        <View
-          style={styles.footerIconContainer}
-          onTouchEnd={() => navigation.navigate("Locationss")}
-        >
+        <View style={styles.footerIconContainer} onTouchEnd={() => navigation.navigate("Locationss")}>
           <Image source={LocationIcon} style={styles.footerIcon} />
           <Text style={styles.footerIconText}>Location</Text>
         </View>
-        <View
-          style={styles.footerIconContainer}
-          onTouchEnd={() => navigation.navigate("Discountss")}
-        >
+        <View style={styles.footerIconContainer} onTouchEnd={() => navigation.navigate("Discountss")}>
           <Image source={Discount} style={styles.footerIcon} />
           <Text style={styles.footerIconText}>Discounts</Text>
         </View>
@@ -537,3 +524,4 @@ const styles = StyleSheet.create({
 });
 
 export default Service5details;
+
