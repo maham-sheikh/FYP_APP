@@ -2,6 +2,9 @@ import 'setimmediate';
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
+import { store, persistor } from './Components/redux/store'; 
 import FindigoStart from './Components/FindigoStart/FindigoStart';
 import ChooseRole from './Components/ChooseRole/ChooseRole';
 import CustomerSide from './Components/CustomerSide/CustomerSide';
@@ -52,6 +55,8 @@ function App() {
   ]);
   
   return (
+    <Provider store={store}>
+        <PersistGate loading={null} persistor={persistor}>
     <LocationProvider>
     <NavigationContainer>
       <Stack.Navigator initialRouteName="FindigoStart">
@@ -258,6 +263,8 @@ function App() {
       </Stack.Navigator>
     </NavigationContainer>
     </LocationProvider>
+    </PersistGate>
+    </Provider>
   );
 }
 
