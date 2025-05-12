@@ -1,24 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, Image, Dimensions, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { useFonts } from 'expo-font';
+import { useIsFocused } from '@react-navigation/native';
+import axios from 'axios';
+import { LocationContext } from '../Locationss/locationContext';
+
 import Home from '../../assets/Home.png';
 import Like from '../../assets/Favourities.png';
 import Category from '../../assets/Servies.png';
 import Discount from '../../assets/Discounts.png';
-import Location from '../../assets/Location.png';
+import LocationIcon from '../../assets/Location.png';
 import verified from '../../assets/verified.png';
 import mysave from '../../assets/mysave.png';
 import mysaveFilled from '../../assets/filledheart.png';
 import starFilled from '../../assets/starFilled.png';
 import starUnfilled from '../../assets/starUnfilled.png';
 import viewProfile from '../../assets/profileViewArrow.png';
-import { useFonts } from 'expo-font';
-import { useIsFocused } from '@react-navigation/native';
-import axios from 'axios';
-import * as LocationAPI from 'expo-location';
 
 const { width, height } = Dimensions.get('window');
-
-const API_BASE_URL = 'http://192.168.100.148:8000/api/customer';
+const API_BASE_URL = 'http://192.168.18.244:8000/api';
 
 function Service1details({ route, navigation }) {
   const [fontsLoaded] = useFonts({
@@ -31,8 +31,9 @@ function Service1details({ route, navigation }) {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [userLocation, setUserLocation] = useState(null);
   const isFocused = useIsFocused();
+
+  const { location: userLocation, getCurrentLocation } = useContext(LocationContext);
 
   const { mainService, subService, subServiceId, icon } = route.params;
 
@@ -46,22 +47,27 @@ function Service1details({ route, navigation }) {
     if (userLocation) {
       fetchVendorsData();
     }
-  }, [userLocation, selectedDistance]);
+  }, [userLocation]);
 
-  const getCurrentLocation = async () => {
-    try {
-      let { status } = await LocationAPI.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setError('Permission to access location was denied');
-        return;
-      }
+  const calculateRawDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371; // Earth's radius in km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
 
-      let location = await LocationAPI.getCurrentPositionAsync({});
-      setUserLocation(location.coords);
-    } catch (error) {
-      console.error('Error getting location:', error);
-      setError('Failed to get current location');
-    }
+  const deg2rad = (deg) => deg * (Math.PI/180);
+
+  const getDistanceRange = (distance) => {
+    if (distance <= 5) return '5km';
+    if (distance <= 10) return '10km';
+    if (distance <= 15) return '15km';
+    return '20km';
   };
 
   const fetchVendorsData = async () => {
@@ -73,41 +79,58 @@ function Service1details({ route, navigation }) {
         throw new Error('Location not available');
       }
 
-      const response = await axios.get(`${API_BASE_URL}/vendors`, {
+      const response = await axios.get(`${API_BASE_URL}/customer/vendors`, {
         params: {
           subService,
           latitude: userLocation.latitude,
           longitude: userLocation.longitude,
-          maxDistance: parseInt(selectedDistance.replace('km', ''))
+          maxDistance: 20
         }
       });
 
-      setVendors(response.data);
-      setLoading(false);
+      const vendorsWithRange = await Promise.all(response.data.map(async (vendor) => {
+        if (!vendor.latitude || !vendor.longitude) {
+          return { ...vendor, distanceRange: 'unknown' };
+        }
+        
+        const distance = calculateRawDistance(
+          userLocation.latitude,
+          userLocation.longitude,
+          vendor.latitude,
+          vendor.longitude
+        );
+        
+        let ratingData = { average: 0, total: 0 };
+        try {
+          const ratingResponse = await axios.get(`${API_BASE_URL}/reviews/average/${vendor.id}`);
+          if (ratingResponse.data.success) {
+            ratingData = {
+              average: parseFloat(ratingResponse.data.data.averageRating) || 0,
+              total: ratingResponse.data.data.totalReviews || 0
+            };
+          }
+        } catch (error) {
+          console.error('Error fetching ratings for vendor:', vendor.id, error);
+        }
+        
+        return {
+          ...vendor,
+          distance,
+          distanceRange: getDistanceRange(distance),
+          rating: ratingData
+        };
+      }));
+
+      setVendors(vendorsWithRange);
     } catch (error) {
-      console.error('Error fetching vendors:', error);
-      setError(error.message || 'Failed to fetch vendors');
+      setError(error.message || 'Failed to fetch beauty service providers');
+    } finally {
       setLoading(false);
     }
   };
 
-  const calculateDistance = (vendorLat, vendorLon) => {
-    if (!userLocation || !vendorLat || !vendorLon) return 'N/A';
-    
-    const R = 6371; 
-    const dLat = deg2rad(vendorLat - userLocation.latitude);
-    const dLon = deg2rad(vendorLon - userLocation.longitude);
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(deg2rad(userLocation.latitude)) * Math.cos(deg2rad(vendorLat)) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    const distance = R * c; 
-    return distance.toFixed(2) + 'km';
-  };
-
-  const deg2rad = (deg) => {
-    return deg * (Math.PI/180);
+  const calculateDisplayDistance = (distance) => {
+    return distance ? distance.toFixed(2) + 'km' : 'N/A';
   };
 
   const toggleSaveService = (serviceName) => {
@@ -115,6 +138,20 @@ function Service1details({ route, navigation }) {
       ...prev,
       [serviceName]: !prev[serviceName]
     }));
+  };
+
+  const getFilteredVendors = () => {
+    return vendors.filter(vendor => vendor.distanceRange === selectedDistance);
+  };
+
+  const renderStars = (rating) => {
+    return [...Array(5)].map((_, i) => (
+      <Image
+        key={i}
+        source={i < rating ? starFilled : starUnfilled}
+        style={styles.starIcon}
+      />
+    ));
   };
 
   const renderServices = () => {
@@ -126,13 +163,18 @@ function Service1details({ route, navigation }) {
       return <Text style={styles.errorText}>Error: {error}</Text>;
     }
 
-    if (vendors.length === 0) {
-      return <Text style={styles.noServicesText}>No services available for {subService} within {selectedDistance}</Text>;
+    const filteredVendors = getFilteredVendors();
+
+    if (filteredVendors.length === 0) {
+      return (
+        <Text style={styles.noServicesText}>
+          No {subService.toLowerCase()} providers found within {selectedDistance}
+        </Text>
+      );
     }
 
-    return vendors.map((vendor, index) => {
-      const distance = calculateDistance(vendor.latitude, vendor.longitude);
-      const mockReview = (index % 5) + 1; 
+    return filteredVendors.map((vendor, index) => {
+      const distance = calculateDisplayDistance(vendor.distance);
 
       return (
         <View key={vendor.id} style={styles.serviceContainer}>
@@ -146,6 +188,14 @@ function Service1details({ route, navigation }) {
             )}
           </View>
           <Text style={styles.serviceWork}>{vendor.service_type || subService}</Text>
+          
+          {vendor.working_hours && (
+            <Text style={styles.workingHours}>Hours: {vendor.working_hours}</Text>
+          )}
+          {vendor.price && (
+            <Text style={styles.priceText}>Price: {vendor.price || 'N/A'}</Text>
+          )}
+          
           <View style={styles.myserviceRow}>
             <Text style={styles.serviceDistance}>{distance}</Text>
             <TouchableOpacity 
@@ -164,22 +214,28 @@ function Service1details({ route, navigation }) {
             </TouchableOpacity>
           </View>
           
-          <View style={styles.reviewSection}>
-            <Text style={styles.reviewText}>Reviews</Text>
+          <View style={styles.ratingSection}>
+            <Text style={styles.ratingText}>Rating:</Text>
             <View style={styles.starsContainer}>
-              {[...Array(5)].map((_, starIndex) => (
-                <Image
-                  key={starIndex}
-                  source={starIndex < mockReview ? starFilled : starUnfilled}
-                  style={styles.starIcon}
-                />
-              ))}
-              <Text style={styles.filledStarsCount}>{mockReview}</Text>
+              {vendor.rating.average > 0 ? (
+                <>
+                  {renderStars(Math.round(vendor.rating.average))}
+                  <Text style={styles.ratingValue}>
+                    {vendor.rating.average.toFixed(1)} ({vendor.rating.total} reviews)
+                  </Text>
+                </>
+              ) : (
+                <Text style={styles.ratingValue}>No ratings yet</Text>
+              )}
             </View>
           </View>
 
           <TouchableOpacity
-            onPress={() => navigation.navigate('ViewProfile', { vendor })} 
+            onPress={() => navigation.navigate('ViewProfile', { 
+              vendor,
+              serviceType: subService,
+              icon: icon
+            })} 
             style={styles.viewProfileButton}
           >
             <View style={styles.profileContainer}>
@@ -242,12 +298,12 @@ function Service1details({ route, navigation }) {
           <Text style={styles.footerIconText}>Services</Text>
         </View>
         <View style={styles.footerIconContainer} onTouchEnd={() => navigation.navigate('Locationss')}>
-          <Image source={Location} style={styles.footerIcon} />
+          <Image source={LocationIcon} style={styles.footerIcon} />
           <Text style={styles.footerIconText}>Location</Text>
         </View>
-        <View style={styles.footerIconContainer} onTouchEnd={() => navigation.navigate('Discountss')}>
+        <View style={styles.footerIconContainer} onTouchEnd={() => navigation.navigate('CustomerProfile')}>
           <Image source={Discount} style={styles.footerIcon} />
-          <Text style={styles.footerIconText}>Discounts</Text>
+          <Text style={styles.footerIconText}>My Profile</Text>
         </View>
       </View>
     </View>
@@ -366,6 +422,13 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     color: '#50505080',
     marginTop: height * 0.008,
+  },
+  workingHours: {
+    fontFamily: 'Montserrat',
+    fontSize: width * 0.032,
+    fontStyle: 'italic',
+    color: '#505050',
+    marginTop: 5,
   },
   myserviceRow: {
     flexDirection: 'row',
@@ -486,6 +549,40 @@ const styles = StyleSheet.create({
     color: 'red',
     fontSize: 16,
   },
+  priceText: {
+    fontFamily: 'Montserrat',
+    fontSize: width * 0.032,
+    fontStyle: 'italic',
+    color: '#505050',
+    marginTop: 5,
+  },
+  ratingSection: {
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  ratingText: {
+    fontFamily: 'Montserrat',
+    fontSize: width * 0.035,
+    fontWeight: 'bold',
+    marginRight: 5,
+  },
+  starsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  starIcon: {
+    width: width * 0.04,
+    height: width * 0.04,
+    marginRight: 2,
+  },
+  ratingValue: {
+    fontFamily: 'Montserrat',
+    fontSize: width * 0.035,
+    marginLeft: 5,
+    color: '#505050',
+  },
+  
 });
 
 export default Service1details;

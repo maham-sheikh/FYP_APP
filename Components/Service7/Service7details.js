@@ -1,20 +1,24 @@
+import React, { useState, useEffect, useContext } from 'react';
+import { View, Text, StyleSheet, Image, Dimensions, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { useFonts } from 'expo-font';
+import { useIsFocused } from '@react-navigation/native';
+import axios from 'axios';
+import { LocationContext } from '../Locationss/locationContext';
 
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, Dimensions, TouchableOpacity, ActivityIndicator } from 'react-native';
 import Home from '../../assets/Home.png';
 import Like from '../../assets/Favourities.png';
 import Category from '../../assets/Servies.png';
 import Discount from '../../assets/Discounts.png';
-import Location from '../../assets/Location.png';
+import LocationIcon from '../../assets/Location.png';
 import verified from '../../assets/verified.png';
 import mysave from '../../assets/mysave.png';
 import mysaveFilled from '../../assets/filledheart.png';
 import starFilled from '../../assets/starFilled.png';
 import starUnfilled from '../../assets/starUnfilled.png';
 import viewProfile from '../../assets/profileViewArrow.png';
-import { useFonts } from 'expo-font';
 
 const { width, height } = Dimensions.get('window');
+const API_BASE_URL = 'http://192.168.18.244:8000/api';
 
 function Service7details({ route, navigation }) {
   const [fontsLoaded] = useFonts({
@@ -23,132 +27,226 @@ function Service7details({ route, navigation }) {
   });
 
   const [selectedDistance, setSelectedDistance] = useState('5km');
-  const [savedServices, setSavedServices] = useState({}); 
+  const [savedServices, setSavedServices] = useState({});
+  const [vendors, setVendors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const isFocused = useIsFocused();
 
-  if (!fontsLoaded) {
-    return <ActivityIndicator size="large" color="#00B1D0" style={styles.loaderSr} />;
-  }
+  const { location: userLocation, getCurrentLocation } = useContext(LocationContext);
 
-  const { id, name, icon } = route.params;
-  
-const allServices = {
-  1: {
-    '5km': [{ name: 'Harry\'s Salon', work: 'Facial', distance: '1.05km', review: '2.0' }],
-    '10km': [{ name: 'Freddie\'s Beauty', work: 'Facial', distance: '7km', review: '3.0' }],
-    '15km': [{ name: 'Jade\'s Beauty Service', work: 'Facial', distance: '12km', review: '1.0' }],
-    '20km': [{ name: 'Will\'s Facial Works', work: 'Facial', distance: '17km', review: '4.0' }],
-  },
-  2: {
-    '5km': [{ name: 'Harry\'s Spa', work: 'Massage', distance: '1.05km', review: '2.0' }],
-    '10km': [{ name: 'Justin\'s Massage', work: 'Massage', distance: '6km', review: '3.0' }],
-    '15km': [{ name: 'Alan\'s Relaxation Zone', work: 'Massage', distance: '13km', review: '4.0' }],
-    '20km': [{ name: 'Cooling Spa Solutions', work: 'Massage', distance: '16km', review: '1.0' }],
-  },
-  3: {
-    '5km': [{ name: 'Jake\'s Haircuts', work: 'Hair Cut', distance: '2.5km', review: '3.0' }],
-    '10km': [{ name: 'Tommy\'s Hair Studio', work: 'Hair Cut', distance: '8km', review: '4.0' }],
-    '15km': [{ name: 'Lisa\'s Barber Shop', work: 'Hair Cut', distance: '14km', review: '2.0' }],
-    '20km': [{ name: 'Mark\'s Haircut Works', work: 'Hair Cut', distance: '18km', review: '5.0' }],
-  },
-  4: {
-    '5km': [{ name: 'Mona\'s Hair Styling', work: 'Hair Styling', distance: '3km', review: '4.0' }],
-    '10km': [{ name: 'Chris\' Hair Experts', work: 'Hair Styling', distance: '6km', review: '3.0' }],
-    '15km': [{ name: 'Sharon\'s Hair Studio', work: 'Hair Styling', distance: '12km', review: '5.0' }],
-    '20km': [{ name: 'Gary\'s Hair Styling Works', work: 'Hair Styling', distance: '19km', review: '4.0' }],
-  },
-  5: {
-    '5km': [{ name: 'Liam\'s Barber', work: 'Shaving', distance: '4.0km', review: '4.0' }],
-    '10km': [{ name: 'Sara\'s Shaving Service', work: 'Shaving', distance: '9km', review: '3.0' }],
-    '15km': [{ name: 'John\'s Barber Works', work: 'Shaving', distance: '14km', review: '4.0' }],
-    '20km': [{ name: 'Peter\'s Barber Shop', work: 'Shaving', distance: '19km', review: '5.0' }],
-  },
-  6: {
-    '5km': [{ name: 'Noah\'s Threading', work: 'Threading', distance: '2.5km', review: '4.0' }],
-    '10km': [{ name: 'Max\'s Threading Experts', work: 'Threading', distance: '5.5km', review: '3.0' }],
-    '15km': [{ name: 'Eva\'s Eyebrow Studio', work: 'Threading', distance: '13km', review: '2.0' }],
-    '20km': [{ name: 'Alex\'s Threading Works', work: 'Threading', distance: '17km', review: '4.0' }],
-  },
-  7: {
-    '5km': [{ name: 'Olivia\'s Waxing Studio', work: 'Waxing', distance: '1.5km', review: '5.0' }],
-    '10km': [{ name: 'Ben\'s Waxing Services', work: 'Waxing', distance: '6km', review: '4.0' }],
-    '15km': [{ name: 'Zoe\'s Wax Experts', work: 'Waxing', distance: '10km', review: '4.0' }],
-    '20km': [{ name: 'Charlie\'s Waxing Works', work: 'Waxing', distance: '18km', review: '4.0' }],
-  },
-};
+  const { mainService, subService, subServiceId, icon } = route.params;
 
+  useEffect(() => {
+    if (isFocused) {
+      getCurrentLocation();
+    }
+  }, [isFocused]);
 
+  useEffect(() => {
+    if (userLocation) {
+      fetchVendorsData();
+    }
+  }, [userLocation]);
 
+  const calculateRawDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371; // Earth's radius in km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
 
+  const deg2rad = (deg) => deg * (Math.PI/180);
 
+  const getDistanceRange = (distance) => {
+    if (distance <= 5) return '5km';
+    if (distance <= 10) return '10km';
+    if (distance <= 15) return '15km';
+    return '20km';
+  };
 
+  const fetchVendorsData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      if (!userLocation) {
+        throw new Error('Location not available');
+      }
+
+      const response = await axios.get(`${API_BASE_URL}/customer/vendors`, {
+        params: {
+          subService,
+          latitude: userLocation.latitude,
+          longitude: userLocation.longitude,
+          maxDistance: 20
+        }
+      });
+
+      const vendorsWithRange = await Promise.all(response.data.map(async (vendor) => {
+        if (!vendor.latitude || !vendor.longitude) {
+          return { ...vendor, distanceRange: 'unknown' };
+        }
+        
+        const distance = calculateRawDistance(
+          userLocation.latitude,
+          userLocation.longitude,
+          vendor.latitude,
+          vendor.longitude
+        );
+        
+        let ratingData = { average: 0, total: 0 };
+        try {
+          const ratingResponse = await axios.get(`${API_BASE_URL}/reviews/average/${vendor.id}`);
+          if (ratingResponse.data.success) {
+            ratingData = {
+              average: parseFloat(ratingResponse.data.data.averageRating) || 0,
+              total: ratingResponse.data.data.totalReviews || 0
+            };
+          }
+        } catch (error) {
+          console.error('Error fetching ratings for vendor:', vendor.id, error);
+        }
+        
+        return {
+          ...vendor,
+          distance,
+          distanceRange: getDistanceRange(distance),
+          rating: ratingData
+        };
+      }));
+
+      setVendors(vendorsWithRange);
+    } catch (error) {
+      setError(error.message || 'Failed to fetch beauty service providers');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculateDisplayDistance = (distance) => {
+    return distance ? distance.toFixed(2) + 'km' : 'N/A';
+  };
 
   const toggleSaveService = (serviceName) => {
-    setSavedServices((prevState) => ({
-      ...prevState,
-      [serviceName]: !prevState[serviceName],
+    setSavedServices(prev => ({
+      ...prev,
+      [serviceName]: !prev[serviceName]
     }));
   };
 
+  const getFilteredVendors = () => {
+    return vendors.filter(vendor => vendor.distanceRange === selectedDistance);
+  };
+
+  const renderStars = (rating) => {
+    return [...Array(5)].map((_, i) => (
+      <Image
+        key={i}
+        source={i < rating ? starFilled : starUnfilled}
+        style={styles.starIcon}
+      />
+    ));
+  };
+
   const renderServices = () => {
-  const selectedServices = allServices[id]?.[selectedDistance] || [];
-  return selectedServices.map((service, index) => (
-    <View key={index} style={styles.serviceContainer}>
-      <View style={styles.serviceRow}>
-        <Text style={styles.serviceNames}>{service.name}</Text>
-        <View style={styles.verifiedSection}>
-          <Image source={verified} style={styles.verifiedIcon} />
-          <Text style={styles.verifiedText}>Verified</Text>
-        </View>
-      </View>
-      <Text style={styles.serviceWork}>{service.work}</Text>
-      <View style={styles.myserviceRow}>
-        <Text style={styles.serviceDistance}>{service.distance}</Text>
-        <TouchableOpacity onPress={() => toggleSaveService(service.name)} style={styles.heartButton}>
-          <View style={styles.verifiedSection}>
-            <Image source={savedServices[service.name] ? mysaveFilled : mysave} style={styles.saveIcon} />
-            <Text style={styles.verifiedText}>
-              {savedServices[service.name] ? 'Saved' : 'Save'}
-            </Text>
+    if (loading) {
+      return <ActivityIndicator size="large" color="#00B1D0" style={styles.loader} />;
+    }
+
+    if (error) {
+      return <Text style={styles.errorText}>Error: {error}</Text>;
+    }
+
+    const filteredVendors = getFilteredVendors();
+
+    if (filteredVendors.length === 0) {
+      return (
+        <Text style={styles.noServicesText}>
+          No {subService.toLowerCase()} providers found within {selectedDistance}
+        </Text>
+      );
+    }
+
+    return filteredVendors.map((vendor, index) => {
+      const distance = calculateDisplayDistance(vendor.distance);
+
+      return (
+        <View key={vendor.id} style={styles.serviceContainer}>
+          <View style={styles.serviceRow}>
+            <Text style={styles.serviceNames}>{vendor.business_name || vendor.fullName}</Text>
+            {vendor.status === 'approved' && (
+              <View style={styles.verifiedSection}>
+                <Image source={verified} style={styles.verifiedIcon} />
+                <Text style={styles.verifiedText}>Verified</Text>
+              </View>
+            )}
           </View>
-        </TouchableOpacity>
-      </View>
-      
-       <View style={styles.reviewSection}>
-    <Text style={styles.reviewText}>Reviews</Text>
-    <View style={styles.starsContainer}>
-      {[...Array(5)].map((_, starIndex) => (
-        <Image
-          key={starIndex}
-          source={starIndex < service.review ? starFilled : starUnfilled}
-          style={styles.starIcon}
-        />
-      ))}
-      <Text style={styles.filledStarsCount}>{service.review}</Text>
-    </View>
-  </View>
+          <Text style={styles.serviceWork}>{vendor.service_type || subService}</Text>
+          
+          {vendor.working_hours && (
+            <Text style={styles.workingHours}>Hours: {vendor.working_hours}</Text>
+          )}
+          {vendor.price && (
+            <Text style={styles.priceText}>Price: {vendor.price || 'N/A'}</Text>
+          )}
+          
+          <View style={styles.myserviceRow}>
+            <Text style={styles.serviceDistance}>{distance}</Text>
+            <TouchableOpacity 
+              onPress={() => toggleSaveService(vendor.business_name || vendor.fullName)} 
+              style={styles.heartButton}
+            >
+              <View style={styles.verifiedSection}>
+                <Image 
+                  source={savedServices[vendor.business_name || vendor.fullName] ? mysaveFilled : mysave} 
+                  style={styles.saveIcon} 
+                />
+                <Text style={styles.verifiedText}>
+                  {savedServices[vendor.business_name || vendor.fullName] ? 'Saved' : 'Save'}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.ratingSection}>
+            <Text style={styles.ratingText}>Rating:</Text>
+            <View style={styles.starsContainer}>
+              {vendor.rating.average > 0 ? (
+                <>
+                  {renderStars(Math.round(vendor.rating.average))}
+                  <Text style={styles.ratingValue}>
+                    {vendor.rating.average.toFixed(1)} ({vendor.rating.total} reviews)
+                  </Text>
+                </>
+              ) : (
+                <Text style={styles.ratingValue}>No ratings yet</Text>
+              )}
+            </View>
+          </View>
 
-
-
-<TouchableOpacity
-  onPress={() => navigation.navigate('ViewProfile')} 
-  style={styles.viewProfileButton}
->
-  <View style={styles.profileContainer}>
-  <Text style={styles.viewProfileText}>View Profile</Text>
-    <Image source={viewProfile} style={styles.viewProfileImage} />
-    
-  </View>
-</TouchableOpacity>
-</View> 
-  ));
-};
-
-
-
-
-
-
-
+          <TouchableOpacity
+            onPress={() => navigation.navigate('ViewProfile', { 
+              vendor,
+              serviceType: subService,
+              icon: icon
+            })} 
+            style={styles.viewProfileButton}
+          >
+            <View style={styles.profileContainer}>
+              <Text style={styles.viewProfileText}>View Profile</Text>
+              <Image source={viewProfile} style={styles.viewProfileImage} />
+            </View>
+          </TouchableOpacity>
+        </View>
+      );
+    });
+  };
 
   const renderButtons = () => {
     const buttons = ['5km', '10km', '15km', '20km'];
@@ -163,17 +261,28 @@ const allServices = {
     ));
   };
 
+  if (!fontsLoaded) {
+    return <ActivityIndicator size="large" color="#00B1D0" style={styles.loaderSr} />;
+  }
+
   return (
-    
     <View style={styles.container}>
-      <Image source={icon} style={styles.serviceImage} />
-      <Text style={styles.serviceName}>{name}</Text>
-      <View style={styles.buttonsContainer}>{renderButtons()}</View>
+      <Image source={icon} style={styles.imageAAS} />
+      <Text style={styles.textAS}>{mainService}</Text>
+      <Text style={styles.subServiceText}>{subService}</Text>
       
-      
-      <View style={styles.serviceBox}>
-        <View>{renderServices()}</View>
+      <View style={styles.buttonsContainer}>
+        {renderButtons()}
       </View>
+      
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.serviceBox}>
+          {renderServices()}
+        </View>
+      </ScrollView>
 
       <View style={styles.footerContainerAS}>
         <View style={styles.footerIconContainer} onTouchEnd={() => navigation.navigate('Homes')}>
@@ -189,100 +298,34 @@ const allServices = {
           <Text style={styles.footerIconText}>Services</Text>
         </View>
         <View style={styles.footerIconContainer} onTouchEnd={() => navigation.navigate('Locationss')}>
-          <Image source={Location} style={styles.footerIcon} />
+          <Image source={LocationIcon} style={styles.footerIcon} />
           <Text style={styles.footerIconText}>Location</Text>
         </View>
-        <View style={styles.footerIconContainer} onTouchEnd={() => navigation.navigate('Discountss')}>
+        <View style={styles.footerIconContainer} onTouchEnd={() => navigation.navigate('CustomerProfile')}>
           <Image source={Discount} style={styles.footerIcon} />
-          <Text style={styles.footerIconText}>Discounts</Text>
+          <Text style={styles.footerIconText}>My Profile</Text>
         </View>
       </View>
     </View>
   );
 }
+
 const styles = StyleSheet.create({
-
-
-
-  reviewSection: {
-  flexDirection: 'row', 
-  justifyContent: 'space-between', 
-  width: '100%',
-   transform: 'translateY(-10px)',
-},
-
-reviewText: {
-  fontSize: width * 0.032, 
-  fontWeight: '400',  
-  color : '#000000',
-  fontStyle: 'italic', 
-  flex: 1, 
-},
-
-starsContainer: {
-  flexDirection: 'row', 
-  alignItems: 'center', 
-},
-
-starIcon: {
-  width: width * 0.05, 
-  height: width * 0.05, 
-},
-
-filledStarsCount: {
-  fontSize: width * 0.04,
-   fontStyle: 'italic', 
-   color: '#B0B0B0', 
-  marginLeft: width * 0.02, 
-},
-viewProfileButton: {
-  alignItems: 'center',
-  justifyContent: 'center',
-  marginTop: height * 0.02, 
-},
-
-profileContainer: {
-  flexDirection: 'row',  
-  alignItems: 'center', 
-   justifyContent: 'center',   
-},
-
-viewProfileImage: {
-  width: width * 0.05,   
-  height: width * 0.07,
-  resizeMode: 'contain',
-},
-
-viewProfileText: {
-  fontSize: 14,          
-  color: '#00B1D0',        
-  fontWeight: 'bold', 
-},
-
-
-  heartButton: {
-    padding: 10, 
-  },
-container: {
+  container: {
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
     backgroundColor: '#F1FFF3',
     paddingTop: height * 0.08,
     paddingBottom: height * 0.1,
-
-
-
-   
   },
-  
-  serviceImage: {
+  imageAAS: {
     width: width * 0.35,
     height: undefined,
     aspectRatio: 1,
     marginBottom: 10,
   },
-  serviceName: {
+  textAS: {
     fontFamily: 'Montserrat',
     fontSize: width < 350 ? 18 : width * 0.07,
     fontStyle: 'italic',
@@ -294,47 +337,45 @@ container: {
     borderRadius: 5,
     paddingHorizontal: 10,
   },
-
-buttonsContainer: {
-  flexDirection: 'row', 
-  flexWrap: 'nowrap', 
-  justifyContent: 'center',
-  alignItems: 'center', 
-    marginTop: height * 0.01,
-},
-
-button: {
-  backgroundColor: '#00B1D0',
-  borderRadius: 5, 
-  margin: width * 0.02,
-  width: width * 0.20, 
-  height: height * 0.06, 
-  justifyContent: 'center', 
-  alignItems: 'center', 
-  display: 'flex',
-  
-},
-
-
-buttonText: {
-  fontSize: width * 0.04, 
-  color: '#FFF',
-  textAlign: 'center', 
-  textAlignVertical: 'center', 
-  display: 'flex', 
-},
-
-selectedButton: {
-    backgroundColor: '#0098B8', 
-     borderColor: '#000000',
-      borderWidth: 1, 
+  subServiceText: {
+    fontFamily: 'Montserrat',
+    fontSize: width * 0.05,
+    color: '#00B1D0',
+    textAlign: 'center',
+    marginBottom: 10,
   },
-
-
- serviceBox: {
-    alignItems: 'flex-start',
-    justifyContent: 'flex-start',
-    width: '90%', 
+  buttonsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  button: {
+    backgroundColor: '#00B1D0',
+    borderRadius: 5,
+    margin: width * 0.02,
+    width: width * 0.20,
+    height: height * 0.06,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  selectedButton: {
+    backgroundColor: '#0098B8',
+    borderColor: '#000000',
+    borderWidth: 1,
+  },
+  buttonText: {
+    fontSize: width * 0.04,
+    color: '#FFF',
+    textAlign: 'center',
+  },
+  scrollContainer: {
+    width: '100%',
+    paddingHorizontal: 10,
+  },
+  serviceBox: {
+    width: '90%',
+    alignSelf: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
     padding: 15,
@@ -344,50 +385,57 @@ selectedButton: {
     shadowOpacity: 0.2,
     shadowRadius: 1.5,
     elevation: 3,
-    height: height * 0.25, 
-    padding: width * 0.05, 
   },
-
-  
-
-
-
- serviceRow: {
-    flexDirection: 'row', 
-    justifyContent: 'space-between',
-    alignItems: 'center', 
-    width: '100%', 
+  serviceContainer: {
+    marginBottom: 20,
   },
-  serviceNames: {
-    fontSize: width * 0.04, 
-    fontWeight: 'bold',
-    flex: 1, 
-  },
-  verifiedSection: {
-    flexDirection: 'row', 
-    alignItems: 'center', 
-  },
-  verifiedIcon: {
-    width: width * 0.04, 
-    height: width * 0.04, 
-  },
-  verifiedText: {
-    fontSize: width * 0.035, 
-    color: 'green',
-    marginLeft: width * 0.01, 
-  },
-
-  saveIcon: {
-    width: width * 0.07, 
-    height: width * 0.07, 
-  },
-
- myserviceRow: {
+  serviceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
-     transform: 'translateY(-10px)',
+  },
+  serviceNames: {
+    fontSize: width * 0.04,
+    fontWeight: 'bold',
+    flex: 1,
+  },
+  verifiedSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  verifiedIcon: {
+    width: width * 0.04,
+    height: width * 0.04,
+  },
+  verifiedText: {
+    fontSize: width * 0.035,
+    color: 'green',
+    marginLeft: width * 0.01,
+  },
+  serviceWork: {
+    fontFamily: 'Montserrat',
+    fontSize: width * 0.032,
+    fontStyle: 'italic',
+    fontWeight: '400',
+    lineHeight: width * 0.038,
+    textAlign: 'left',
+    color: '#50505080',
+    marginTop: height * 0.008,
+  },
+  workingHours: {
+    fontFamily: 'Montserrat',
+    fontSize: width * 0.032,
+    fontStyle: 'italic',
+    color: '#505050',
+    marginTop: 5,
+  },
+  myserviceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    marginTop: 5,
   },
   serviceDistance: {
     fontSize: 12,
@@ -396,20 +444,58 @@ selectedButton: {
     color: '#50505080',
   },
   heartButton: {
-    padding: 10, 
-    
+    padding: 10,
   },
-  serviceWork: {
-    fontFamily: 'Montserrat',
-    fontSize: width * 0.032, 
-    fontStyle: 'italic',
+  saveIcon: {
+    width: width * 0.07,
+    height: width * 0.07,
+  },
+  reviewSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 5,
+  },
+  reviewText: {
+    fontSize: width * 0.032,
     fontWeight: '400',
-    lineHeight: width * 0.038, 
-    textAlign: 'left',
-    color: '#50505080',
-    marginTop: height * 0.008, 
+    color: '#000000',
+    fontStyle: 'italic',
   },
-
+  starsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  starIcon: {
+    width: width * 0.05,
+    height: width * 0.05,
+  },
+  filledStarsCount: {
+    fontSize: width * 0.04,
+    fontStyle: 'italic',
+    color: '#B0B0B0',
+    marginLeft: width * 0.02,
+  },
+  viewProfileButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: height * 0.02,
+  },
+  profileContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  viewProfileImage: {
+    width: width * 0.05,
+    height: width * 0.07,
+    resizeMode: 'contain',
+  },
+  viewProfileText: {
+    fontSize: 14,
+    color: '#00B1D0',
+    fontWeight: 'bold',
+  },
   footerContainerAS: {
     width: '100%',
     height: height * 0.1,
@@ -448,12 +534,55 @@ selectedButton: {
     alignItems: 'center',
     backgroundColor: '#F1FFF3',
   },
-
- 
-
+  loader: {
+    marginVertical: 20,
+  },
+  noServicesText: {
+    textAlign: 'center',
+    marginVertical: 20,
+    color: '#505050',
+    fontSize: 16,
+  },
+  errorText: {
+    textAlign: 'center',
+    marginVertical: 20,
+    color: 'red',
+    fontSize: 16,
+  },
+  priceText: {
+    fontFamily: 'Montserrat',
+    fontSize: width * 0.032,
+    fontStyle: 'italic',
+    color: '#505050',
+    marginTop: 5,
+  },
+  ratingSection: {
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  ratingText: {
+    fontFamily: 'Montserrat',
+    fontSize: width * 0.035,
+    fontWeight: 'bold',
+    marginRight: 5,
+  },
+  starsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  starIcon: {
+    width: width * 0.04,
+    height: width * 0.04,
+    marginRight: 2,
+  },
+  ratingValue: {
+    fontFamily: 'Montserrat',
+    fontSize: width * 0.035,
+    marginLeft: 5,
+    color: '#505050',
+  },
+  
 });
 
 export default Service7details;
-
-
-
