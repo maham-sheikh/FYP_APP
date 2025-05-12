@@ -2,9 +2,6 @@ import 'setimmediate';
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { Provider } from 'react-redux';
-import { PersistGate } from 'redux-persist/integration/react';
-import { store, persistor } from './Components/redux/store'; 
 import FindigoStart from './Components/FindigoStart/FindigoStart';
 import ChooseRole from './Components/ChooseRole/ChooseRole';
 import CustomerSide from './Components/CustomerSide/CustomerSide';
@@ -16,7 +13,6 @@ import BusinessSignUp from './Components/BuisnessSignUp/BuisnessSignUp';
 import Servicess from './Components/Servicess/Servicess';
 import Homes from './Components/Homes/Homes';
 import Likes from './Components/Likes/Likes';
-import Discountss from './Components/Discountss/Discountss';
 import Locationss from './Components/Locationss/Locationss';
 import Service1 from './Components/Service1/Service1';
 import Service2 from './Components/Service2/Service2';
@@ -46,6 +42,7 @@ import { LogBox } from 'react-native';
 import VendorLocation from './Components/VendorDashboard/VendorLocation';
 import VendorProfile from './Components/VendorDashboard/VendorProfile';
 import {LocationProvider} from "./Components/Locationss/locationContext"
+import CustomerProfile from './Components/CustomerProfile/CustomerProfile';
 
 const Stack = createStackNavigator();
 
@@ -55,8 +52,6 @@ function App() {
   ]);
   
   return (
-    <Provider store={store}>
-        <PersistGate loading={null} persistor={persistor}>
     <LocationProvider>
     <NavigationContainer>
       <Stack.Navigator initialRouteName="FindigoStart">
@@ -181,8 +176,8 @@ function App() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="Discountss"
-          component={Discountss}
+          name="CustomerProfile"
+          component={CustomerProfile}
           options={{ headerShown: false }}
         />
         <Stack.Screen
@@ -263,8 +258,6 @@ function App() {
       </Stack.Navigator>
     </NavigationContainer>
     </LocationProvider>
-    </PersistGate>
-    </Provider>
   );
 }
 
