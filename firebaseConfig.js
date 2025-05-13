@@ -1,16 +1,21 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, signInWithPhoneNumber, PhoneAuthProvider, signInWithCredential } from "firebase/auth";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getReactNativePersistence } from 'firebase/auth'; // For persistence
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDaRziL4hdQ3RSgn_Kk4PJQycr9tXhOz2o", 
-  authDomain: "findigoapp-ffa7a.firebaseapp.com",    
-  projectId: "findigoapp-ffa7a",
-  storageBucket: "findigoapp-ffa7a.appspot.com",     
-  messagingSenderId: "922532947674",
-  appId: "1:922532947674:ios:4e65af7d65bb01be8a27e3",
+  apiKey: "AIzaSyABseLRTgm6vkSTLXgiXa1Shnf833LnzhI",
+  authDomain: "otpapp-e193f.firebaseapp.com",
+  projectId: "otpapp-e193f",
+  storageBucket: "otpapp-e193f.firebasestorage.app",
+  messagingSenderId: "906030618378",
+  appId: "1:906030618378:ios:842abd07c0c419dfdb4cf3",
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+
+
+auth.setPersistence(getReactNativePersistence(AsyncStorage));
 
 export { auth, firebaseConfig, signInWithPhoneNumber, PhoneAuthProvider, signInWithCredential };
